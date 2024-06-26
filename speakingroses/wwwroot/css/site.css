@@ -1,0 +1,37 @@
+* {
+  font-family: "Poppins", sans-serif;
+  color: #0A061E;
+}
+
+div[modal-backdrop] {
+  background: rgb(236, 240, 246, 0.75);
+}
+
+.flatpickr-day.today {
+  border-color: #6F4FFF !important;
+}
+
+.flatpickr-day.selected {
+  background-image: linear-gradient(to bottom, #977FFF, #6F4FFF) !important;
+  color: #fff !important;
+  border-radius: 30px !important;
+  border-color: #6F4FFF !important;
+}
+
+input.just-validate-error-field,
+input.just-validate-error-field:focus,
+textarea.just-validate-error-field,
+textarea.just-validate-error-field:focus,
+select.just-validate-error-field,
+select.just-validate-error-field:focus,
+input.just-validate-error-field+input,
+input.just-validate-error-field+input:focus {
+  border-color: #FF5555 !important;
+  border-width: 2px;
+  box-shadow: none;
+}
+
+.just-validate-error-label {
+  color: #FF5555;
+  font-size: 14px;
+}

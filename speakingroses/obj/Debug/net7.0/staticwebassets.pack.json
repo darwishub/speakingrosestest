@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "F:\\TEST\\speakingrosestest\\speakingroses\\obj\\Debug\\net7.0\\scopedcss\\projectbundle\\speakingrosestest.bundle.scp.css",
+      "PackagePath": "staticwebassets\\speakingrosestest.bundle.scp.css"
+    },
+    {
+      "Id": "F:\\TEST\\speakingrosestest\\speakingroses\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
+      "Id": "F:\\TEST\\speakingrosestest\\speakingroses\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "F:\\TEST\\speakingrosestest\\speakingroses\\wwwroot\\js\\fetch.js",
+      "PackagePath": "staticwebassets\\js\\fetch.js"
+    },
+    {
+      "Id": "F:\\TEST\\speakingrosestest\\speakingroses\\wwwroot\\js\\site.js",
+      "PackagePath": "staticwebassets\\js\\site.js"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.build.speakingrosestest.props",
+      "PackagePath": "build\\speakingrosestest.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildMultiTargeting.speakingrosestest.props",
+      "PackagePath": "buildMultiTargeting\\speakingrosestest.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildTransitive.speakingrosestest.props",
+      "PackagePath": "buildTransitive\\speakingrosestest.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.speakingrosestest.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

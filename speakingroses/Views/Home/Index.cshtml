@@ -1,0 +1,935 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<header class="flex items-center justify-center mb-8">
+    <div class="max-w-[1300px] bg-white grid grid-cols-2 w-full mt-3 p-4 rounded-[18px] items-center">
+        <div class="">
+            <span class="font-bold text-lg leading-[27px]">Task Management</span>
+        </div>
+        <div class="">
+            <div class="flex gap-3 items-center justify-end">
+                <button type="button" data-modal-target="add-new-task" data-modal-toggle="add-new-task"
+                    class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full border border-taskia-background-grey">Add
+                    New Task</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex justify-start flex-col md:flex-row gap-5 mb-8" x-data>
+    <div class="relative">
+        <label for="filterbydate" class="block mb-2 font-semibold">By due date</label>
+        <input type="text" id="filterbydate"
+            class="w-full md:max-w-48 flatpickr-input h-12 border border-[#ECF0F6] rounded-[30px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block p-[12px_18px]"
+            placeholder="Select due date" name="dueDate" x-init="dueDateFlatPickr()">
+    </div>
+    <div>
+        <label for="filterbypriority" class="block mb-2 font-semibold">By priority</label>
+        <select id="filterbypriority" x-on:change="$store.tasks.filterByPriority"
+            class="w-full md:max-w-48 border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block p-[12px_16px]">
+            <option value="">All</option>
+            <option value="3">High</option>
+            <option value="2">Medium</option>
+            <option value="1">Low</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="filterbystatus" class="block mb-2 font-semibold">By status</label>
+        <select id="filterbystatus" x-on:change="$store.tasks.filterByStatus"
+            class="w-full md:max-w-48 border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block p-[12px_16px]">
+            <option value="">All</option>
+            <option value="0">In progress</option>
+            <option value="1">Completed</option>
+        </select>
+    </div>
+
+</div>
+
+<div class="flex flex-col justify-center items-center gap-5 mb-8" x-data>
+
+    <template x-for="(task, index) in $store.tasks.data">
+        <div class="bg-white p-5 w-full rounded-[30px]" :class="{ 'opacity-50' : task.status }">
+            <div class="task-card flex flex-col gap-5">
+                <div class="flex gap-3 items-center">
+                    <div class="flex flex-col">
+                        <p class="text-sm leading-[21px] text-[#FF5555]" x-text="`Due at ${task.dueDate}`"></p>
+                        <p class="text-lg leading-[27px] mb-3" :class="{ 'line-through' : task.status }"
+                            x-text="task.title"></p>
+                        <p class="text-base leading-[21px]" :class="{ 'line-through' : task.status }"
+                            x-text="task.description"></p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-start lg:items-end gap-3 lg:gap-0 flex-col lg:flex-row">
+                    <div class="flex gap-4 font-semibold text-sm leading-[21px]">
+                        <div class="flex gap-1 items-center">
+                            <div class="flex shrink-0">
+                                <ion-icon class="text-2xl" name="layers-outline"></ion-icon>
+                            </div>
+                            <p x-text="$store.tasks.convertPriority(task.priority)"></p>
+                        </div>
+                        <div class="flex gap-1 items-center">
+                            <div class="flex shrink-0">
+                                <ion-icon class="text-2xl" :class="{ 'text-[#008A3E]' : task.status }"
+                                    :name="task.status ? 'flag' : 'flag-outline'"></ion-icon>
+                            </div>
+                            <p :class="{ 'text-[#008A3E]' : task.status }"
+                                x-text="task.status ? 'Completed' : 'In Progress'"></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-row items-center gap-x-3">
+                        <button type="button" x-on:click="$store.tasks.setDeleteDialogId(task?.taskId)"
+                            class="my-auto font-semibold border border-[#FF5555] p-[12px_12px] w-12 h-12 rounded-full">
+                            <ion-icon class="text-2xl text-[#FF5555]" name="trash"></ion-icon>
+                        </button>
+                        <button type="button" x-on:click="$store.tasks.setDataEdit(task)"
+                            class="my-auto font-semibold border border-[#c69030] p-[12px_12px] w-12 h-12 rounded-full">
+                            <ion-icon class="text-2xl text-[#c69030]" name="pencil"></ion-icon>
+                        </button>
+
+                        <button type="button" x-show="!task.status"
+                            x-on:click="$store.tasks.setCompleteDialogId(task?.taskId)"
+                            class="flex gap-[10px] justify-center items-center text-white p-[12px_12px] w-12 h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full w-full">
+                            <ion-icon class="text-2xl text-white" name="checkmark-done"></ion-icon>
+                        </button>
+
+                        <button type="button" x-show="task.status"
+                            x-on:click="$store.tasks.setIncompleteDialogId(task?.taskId)"
+                            class="flex gap-[10px] justify-center items-center text-white p-[12px_12px] w-12 h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full w-full">
+                            <ion-icon class="text-2xl text-white" name="close"></ion-icon>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template x-if="$store.tasks.tasksEmpty && !$store.tasks.isFiltering">
+        <template x-for="i in 4">
+            <div class="bg-white p-5 w-full rounded-[30px] animate-pulse">
+                <div class="task-card flex flex-col gap-5">
+                    <div class="w-full">
+                        <div class="flex flex-col">
+                            <div class="bg-[#FF5555] h-4 w-32 mb-4 rounded"></div>
+                            <div class="text-lg leading-[27px] mb-3 w-1/4 bg-gray-200 h-7 rounded"></div>
+                            <div class="text-base leading-[21px] bg-gray-300 h-5 rounded mb-3"></div>
+                            <div class="text-base leading-[21px] bg-gray-300 h-5 rounded mb-3"></div>
+                            <div class="text-base leading-[21px] bg-gray-300 h-5 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-4 font-semibold text-sm leading-[21px]">
+                            <div class="flex gap-1 items-center">
+                                <div class="bg-gray-400 h-8 w-20 rounded"></div>
+                            </div>
+                            <div class="flex gap-1 items-center">
+                                <div class="bg-gray-400 h-8 w-20 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-row items-center gap-x-3">
+                            <div class="my-auto w-12 h-12 rounded-full bg-gray-200"></div>
+                            <div class="my-auto w-12 h-12 rounded-full bg-gray-200"></div>
+                            <div
+                                class="flex gap-[10px] justify-center items-center text-white  w-12 h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+
+    <template x-if="$store.tasks.tasksEmpty && $store.tasks.isFiltering">
+        <span class="font-bold text-lg leading-[27px]">No tasks found</span>
+    </template>
+
+</div>
+
+<div id="edit-task" data-modal-backdrop="static" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    x-data>
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <form id="form-edit-task" x-on:submit="$store.tasks.updateTask" x-ref="form_edit_task"
+            x-init="editFormValidation($refs.form_edit_task)">
+            <div class="relative bg-white rounded-[30px]">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5">
+                    <h3 class="text-xl font-semibold">
+                        Edit Task
+                    </h3>
+                    <button type="button"
+                        class="text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                        x-on:click="$store.tasks.closeEditModal">
+
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="p-4 md:p-5 space-y-4">
+                    <div class="flex flex-col">
+                        <label for="title" class="block mb-2 font-semibold">Title</label>
+                        <div class="relative mb-4">
+                            <input type="text" id="edit-title" name="title"
+                                class="h-12 border border-[#ECF0F6] rounded-[30px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                placeholder="Enter task title here." :value="$store.tasks.dataEdit?.title" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="block mb-2 font-semibold">Description</label>
+                            <textarea id="edit-description" rows="4" name="description"
+                                class="border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                placeholder="Enter task description here." :value="$store.tasks.dataEdit?.description"
+                                required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="priority" class="block mb-2 font-semibold">Priority</label>
+                            <select id="edit-priority" name="priority"
+                                class="border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                :value="$store.tasks.dataEdit?.priority" required>
+                                <option value="" disabled selected>Select a priority</option>
+                                <option value="3">High</option>
+                                <option value="2">Medium</option>
+                                <option value="1">Low</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="taskduedate" class="block mb-2 font-semibold">Due Date</label>
+                            <div class="relative w-full">
+                                <input type="text" id="editduedate" name="dueDate"
+                                    class="flatpickr-input h-12 border border-[#ECF0F6] rounded-[30px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_18px]"
+                                    placeholder="Select due date for this task" x-init="dueDateFlatPickr()" required
+                                    :value="$store.tasks.dataEdit?.dueDate">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex items-center p-4 md:p-5 rounded-b">
+                    <button type="submit"
+                        class="w-full text-white h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] w-full rounded-full border border-taskia-background-grey"
+                        x-text="$store.tasks.loading ? 'Loading...' : 'UpdateTask'"
+                        :disabled="$store.tasks.loading"></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="complete-dialog" data-modal-backdrop="static" tabindex="-1"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    x-data>
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-[30px]">
+            <button type="button"
+                class="absolute top-3 end-2.5 text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                x-on:click="$store.tasks.closeCompleteDialog">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="p-4 md:p-5 text-center">
+                <ion-icon class="text-2xl mx-auto mb-4 text-[#FF5555] w-12 h-12" name="alert-circle"></ion-icon>
+                <h3 class="mb-5 text-lg font-normal">Are you sure you want to mark this task as completed?</h3>
+                <div class="flex justify-center">
+                    <button type="button" x-on:click="$store.tasks.completeTask"
+                        class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full border border-taskia-background-grey">
+                        Yes, I'm sure
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="remove-task-dialog" data-modal-backdrop="static" tabindex="-1"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    x-data>
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-[30px]">
+            <button type="button"
+                class="absolute top-3 end-2.5 text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                x-on:click="$store.tasks.closeRemoveDialog">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="p-4 md:p-5 text-center">
+                <ion-icon class="text-2xl mx-auto mb-4 text-[#FF5555] w-12 h-12" name="alert-circle"></ion-icon>
+                <h3 class="mb-5 text-lg font-normal">Are you sure you want to remove this task?</h3>
+                <div class="flex justify-center">
+                    <button type="button" x-on:click="$store.tasks.deleteTask"
+                        class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full border border-taskia-background-grey">
+                        Yes, I'm sure
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="incomplete-dialog" data-modal-backdrop="static" tabindex="-1"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    x-data>
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-[30px]">
+            <button type="button"
+                class="absolute top-3 end-2.5 text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                x-on:click="$store.tasks.closeIncompleteDialog">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="p-4 md:p-5 text-center">
+                <ion-icon class="text-2xl mx-auto mb-4 text-[#FF5555] w-12 h-12" name="alert-circle"></ion-icon>
+                <h3 class="mb-5 text-lg font-normal">Are you sure you want to revert this task to "In Progress"?</h3>
+                <div class="flex justify-center">
+                    <button type="button" x-on:click="$store.tasks.inCompleteTask"
+                        class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full border border-taskia-background-grey">
+                        Yes, I'm sure
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="add-new-task" data-modal-backdrop="static" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+    x-data>
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <form id="form-add-task" x-on:submit="$store.tasks.addTask" x-ref="form_add_task"
+            x-init="addFormValidation($refs.form_add_task)">
+            <div class="relative bg-white rounded-[30px]">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5">
+                    <h3 class="text-xl font-semibold">
+                        Add New Task
+                    </h3>
+                    <button type="button"
+                        class="text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+                        data-modal-hide="add-new-task">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <div class="p-4 md:p-5 space-y-4">
+                    <div class="flex flex-col">
+                        <label for="title" class="block mb-2 font-semibold">Title</label>
+                        <div class="relative  mb-4">
+                            <input type="text" id="title"
+                                class="h-12 border border-[#ECF0F6] rounded-[30px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                placeholder="Enter task title here." name="title" required>
+                        </div>
+
+                        <div class=" mb-4">
+                            <label for="description" class="block mb-2 font-semibold">Description</label>
+                            <textarea id="description" rows="4"
+                                class="border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                placeholder="Enter task description here." name="description" required></textarea>
+                        </div>
+
+                        <div class=" mb-4">
+                            <label for="priority" class="block mb-2 font-semibold">Priority</label>
+                            <select id="priority"
+                                class="border border-[#ECF0F6] rounded-[18px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_16px]"
+                                name="priority" required>
+                                <option value="" disabled selected>Select a priority</option>
+                                <option value="3">High</option>
+                                <option value="2">Medium</option>
+                                <option value="1">Low</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="taskduedate" class="block mb-2 font-semibold">Due Date</label>
+                            <div class="relative w-full">
+                                <input type="text" id="taskduedate"
+                                    class="flatpickr-input h-12 border border-[#ECF0F6] rounded-[30px] focus-within:ring-1 focus-within:ring-[#6F4FFF] block w-full p-[12px_18px]"
+                                    placeholder="Select due date for this task" name="dueDate" required
+                                    x-init="dueDateFlatPickr()">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- Modal footer -->
+                <div class="flex items-center p-4 md:p-5 rounded-b">
+                    <button type="submit" :disabled="$store.tasks.loading"
+                        class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] w-full rounded-full border border-taskia-background-grey"
+                        x-text="$store.tasks.loading ? 'Loading...' : 'Save New Task'"></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    let formadd_validator;
+    let formedit_validator;
+
+    async function getTasks() {
+        const inputDateValue = document.getElementById('filterbydate').value;
+        const date = new Date(inputDateValue);
+        let isoDateString;
+
+        if (!isNaN(date.getTime())) {
+            isoDateString = date.toISOString();
+        }
+        const filterByPriority = document.getElementById('filterbypriority').value;
+        const filterByStatus = document.getElementById('filterbystatus').value;
+        const params = new URLSearchParams({
+            dueDate: isoDateString,
+            priority: filterByPriority,
+            status: filterByStatus == "1" ? true : filterByStatus == "0" ? false : ''
+        });
+
+        try {
+            const response = await get(`/Home/GetTasks?${params.toString()}`);
+            return response;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    };
+
+    async function addTask(event) {
+        event.preventDefault();
+
+        try {
+            if (formadd_validator.isValid) {
+                const form = event.target.form || event.target;
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                data.priority = parseInt(data.priority);
+                data.dueDate = new Date(data.dueDate).toISOString();
+                Alpine.store('tasks').loading = true;
+                Alpine.store('tasks').isFiltering = false;
+                const response = await create("/Home/InsertTask", data);
+                if (response?.response?.status == 200) {
+                    form.reset();
+                    document.querySelector('[data-modal-hide="add-new-task"]').click();
+                    Alpine.store('tasks').init();
+                }
+                Alpine.store('tasks').loading = false;
+
+                return response;
+            }
+        } catch (error) {
+            console.log('Error creating task:', error);
+        }
+    }
+
+    async function updateTask(event) {
+        event.preventDefault();
+
+        try {
+
+            const form = event.target.form || event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            data.priority = parseInt(data.priority);
+            data.dueDate = new Date(data.dueDate).toISOString();
+            data.taskId = Alpine.store('tasks').dataEdit?.taskId;
+            Alpine.store('tasks').loading = true;
+            Alpine.store('tasks').isFiltering = false;
+            const response = await update(`/Home/UpdateTask/${Alpine.store('tasks').dataEdit?.taskId}`, data);
+            if (response?.response?.status == 200) {
+                const $targetEl = document.getElementById('edit-task');
+                const instanceOptions = {
+                    id: 'edit-task',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        resetEditFormAndValidation();
+                        Alpine.store('tasks').dataEdit = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+                Alpine.store('tasks').init();
+            }
+            Alpine.store('tasks').loading = false;
+
+            return response;
+
+        } catch (error) {
+            console.log('Error updating task:', error);
+        }
+    }
+
+    function addFormValidation(form) {
+        const element = document.getElementById(form.id);
+        if (!formadd_validator) {
+            formadd_validator = new JustValidate(element);
+        }
+
+        formadd_validator
+            .addField('#title', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please enter a title for the task.',
+                },
+                {
+                    rule: 'minLength',
+                    value: 3,
+                    errorMessage: 'Title must be at least 3 characters long.',
+                },
+                {
+                    rule: 'maxLength',
+                    value: 100,
+                    errorMessage: 'Title must not exceed 100 characters.',
+                },
+            ])
+            .addField('#description', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please enter a description for the task.',
+                },
+                {
+                    rule: 'minLength',
+                    value: 3,
+                    errorMessage: 'Description must be at least 3 characters long.',
+                },
+                {
+                    rule: 'maxLength',
+                    value: 500,
+                    errorMessage: 'Description must not exceed 500 characters.',
+                },
+            ])
+            .addField('#priority', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please select a priority for the task.',
+                },
+            ])
+            .addField('#taskduedate', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please select a due date for the task.',
+                }
+            ]);
+    }
+
+    function editFormValidation(form) {
+        const element = document.getElementById(form.id);
+        if (!formedit_validator) {
+            formedit_validator = new JustValidate(element, {
+                validateBeforeSubmitting: true,
+            });
+        }
+
+        formedit_validator
+            .addField('#edit-title', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please enter a title for the task.',
+                },
+                {
+                    rule: 'minLength',
+                    value: 3,
+                    errorMessage: 'Title must be at least 3 characters long.',
+                },
+                {
+                    rule: 'maxLength',
+                    value: 100,
+                    errorMessage: 'Title must not exceed 100 characters.',
+                },
+            ])
+            .addField('#edit-description', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please enter a description for the task.',
+                },
+                {
+                    rule: 'minLength',
+                    value: 3,
+                    errorMessage: 'Description must be at least 3 characters long.',
+                },
+                {
+                    rule: 'maxLength',
+                    value: 500,
+                    errorMessage: 'Description must not exceed 500 characters.',
+                },
+            ])
+            .addField('#edit-priority', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please select a priority for the task.',
+                },
+            ])
+            .addField('#editduedate', [
+                {
+                    rule: 'required',
+                    errorMessage: 'Please select a due date for the task.',
+                }
+            ]);
+    }
+
+    function dueDateFlatPickr() {
+        const dueDateInputs = document.querySelectorAll('.flatpickr-input');
+        dueDateInputs.forEach(input => {
+            const minDateValue = input.id != 'filterbydate' ? 'today' : undefined;
+            flatpickr(input, {
+                enableTime: false,
+                dateFormat: 'd F Y',
+                minDate: minDateValue,
+                altInput: true,
+                altFormat: 'd F Y',
+                locale: {
+                    firstDayOfWeek: 1,
+                },
+                onChange: async function (selectedDates, dateStr, instance) {
+                    if (instance.element.id == 'filterbydate') {
+                        Alpine.store('tasks').isFiltering = true;
+                        await Alpine.store('tasks').init();
+                    }
+                }
+            });
+        });
+    }
+
+    function resetAddFormAndValidation() {
+        if (formadd_validator) {
+            formadd_validator.refresh();
+        }
+    }
+
+    function resetEditFormAndValidation() {
+        if (formedit_validator) {
+            formedit_validator.refresh();
+        }
+    }
+
+    function initializeModal($targetEl, defaultOptions = {}, instanceOptions) {
+        // Default options
+        const options = {
+            placement: 'center-center',
+            backdrop: 'static',
+            backdropClasses: 'bg-gray-900/50 dark:bg-gray-900/80 fixed inset-0 z-40',
+            closable: true,
+            ...defaultOptions
+        };
+
+        const modal = new Modal($targetEl, options, instanceOptions);
+        return modal;
+    }
+
+
+    document.addEventListener('alpine:init', () => {
+
+        Alpine.store('tasks', {
+            data: [],
+            completeId: undefined,
+            incompleteId: undefined,
+            deleteId: undefined,
+            dataEdit: undefined,
+            loading: false,
+            isFiltering: false,
+            get tasksEmpty() {
+                return this.data.length == 0;
+            },
+            async init() {
+                await getTasks().then(data => {
+                    this.data = data.data?.map(task => ({
+                        ...task,
+                        dueDate: this.formatToLocalDateTime(task.dueDate)
+                    }));
+                });
+            },
+            formatToLocalDateTime(isoDateString) {
+                const utcDate = new Date(isoDateString + 'Z');
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const localDate = new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+                const options = {
+                    year: 'numeric',
+                    month: 'long',
+                    day: '2-digit'
+                };
+                return localDate.toLocaleDateString('en-US', options);
+            },
+            convertPriority(priorityValue) {
+                switch (priorityValue) {
+                    case 1: return 'Low';
+                    case 2: return 'Medium';
+                    case 3: return 'High';
+                    default: return 'Unknown';
+                }
+            },
+            convertStatus(statusValue) {
+                const numericStatus = Number(statusValue);
+                return numericStatus ? 'Completed' : 'In Progress';
+            },
+            async addTask(event) {
+                await addTask(event);
+            },
+            async updateTask(event) {
+                if (formedit_validator.isValid) {
+                    await updateTask(event);
+                } else {
+                    formedit_validator.revalidate().then(isValid => {
+                        if (isValid) {
+                            updateTask(event);
+                        }
+                    })
+                }
+            },
+            async filterByPriority() {
+                Alpine.store('tasks').isFiltering = true;
+                await Alpine.store('tasks').init();
+            },
+            async filterByStatus() {
+                Alpine.store('tasks').isFiltering = true;
+                await Alpine.store('tasks').init();
+            },
+            setCompleteDialogId(id) {
+                this.completeId = id;
+                const $targetEl = document.getElementById('complete-dialog');
+                const instanceOptions = {
+                    id: 'complete-dialog',
+                    override: true,
+                };
+                const modal = initializeModal($targetEl, instanceOptions);
+                modal.show();
+            },
+            setIncompleteDialogId(id) {
+                this.incompleteId = id;
+                const $targetEl = document.getElementById('incomplete-dialog');
+                const instanceOptions = {
+                    id: 'incomplete-dialog',
+                    override: true,
+                };
+                const modal = initializeModal($targetEl, instanceOptions);
+                modal.show();
+            },
+            setDeleteDialogId(id) {
+                this.deleteId = id;
+                const $targetEl = document.getElementById('remove-task-dialog');
+                const instanceOptions = {
+                    id: 'remove-task-dialog',
+                    override: true,
+                };
+                const modal = initializeModal($targetEl, instanceOptions);
+                modal.show();
+            },
+            setDataEdit(task) {
+                Alpine.store('tasks').dataEdit = task;
+                const $targetEl = document.getElementById('edit-task');
+                const instanceOptions = {
+                    id: 'edit-task',
+                    override: true,
+                };
+                const modal = initializeModal($targetEl, instanceOptions);
+                modal.show();
+                document.getElementById('editduedate').nextElementSibling.value = Alpine.store('tasks').dataEdit?.dueDate;
+            },
+            closeEditModal() {
+                const $targetEl = document.getElementById('edit-task');
+                const instanceOptions = {
+                    id: 'edit-task',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        resetEditFormAndValidation();
+                        Alpine.store('tasks').dataEdit = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+            },
+            closeCompleteDialog() {
+                const $targetEl = document.getElementById('complete-dialog');
+                const instanceOptions = {
+                    id: 'complete-dialog',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        Alpine.store('tasks').completeId = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+            },
+            closeRemoveDialog() {
+                const $targetEl = document.getElementById('remove-task-dialog');
+                const instanceOptions = {
+                    id: 'remove-task-dialog',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        Alpine.store('tasks').deleteId = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+            },
+            closeIncompleteDialog() {
+                const $targetEl = document.getElementById('incomplete-dialog');
+                const instanceOptions = {
+                    id: 'incomplete-dialog',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        Alpine.store('tasks').incompleteId = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+            },
+            async completeTask() {
+                try {
+                    let id = Alpine.store('tasks').completeId;
+                    if (id) {
+                        Alpine.store('tasks').loading = true;
+                        Alpine.store('tasks').isFiltering = false;
+                        const response = await patch(`/Home/CompleteTask/${id}`);
+                        if (response?.response?.status == 200) {
+                            const $targetEl = document.getElementById('complete-dialog');
+                            const instanceOptions = {
+                                id: 'complete-dialog',
+                                override: true,
+                            };
+                            const options = {
+                                onHide: () => {
+                                    Alpine.store('tasks').completeId = undefined;
+                                    Alpine.store('tasks').loading = false;
+                                },
+                                onShow: () => {
+                                },
+                                onToggle: () => {
+                                },
+                            };
+                            const modal = initializeModal($targetEl, options, instanceOptions);
+                            modal.hide();
+                            Alpine.store('tasks').init();
+
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error completing task:', error);
+                }
+            },
+            async inCompleteTask() {
+                try {
+                    let id = Alpine.store('tasks').incompleteId;
+                    if (id) {
+                        Alpine.store('tasks').loading = true;
+                        Alpine.store('tasks').isFiltering = false;
+                        const response = await patch(`/Home/IncompleteTask/${id}`);
+                        if (response?.response?.status == 200) {
+                            const $targetEl = document.getElementById('incomplete-dialog');
+                            const instanceOptions = {
+                                id: 'incomplete-dialog',
+                                override: true,
+                            };
+                            const options = {
+                                onHide: () => {
+                                    Alpine.store('tasks').incompleteId = undefined;
+                                    Alpine.store('tasks').loading = false;
+                                },
+                                onShow: () => {
+                                },
+                                onToggle: () => {
+                                },
+                            };
+                            const modal = initializeModal($targetEl, options, instanceOptions);
+                            modal.hide();
+                            Alpine.store('tasks').init();
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error completing task:', error);
+                }
+            },
+            async deleteTask() {
+                try {
+                    let id = Alpine.store('tasks').deleteId;
+                    Alpine.store('tasks').isFiltering = false;
+                    if (id) {
+                        Alpine.store('tasks').loading = true;
+                        const response = await remove(`/Home/DeleteTask/${id}`);
+                        if (response?.response?.status == 200) {
+                            const $targetEl = document.getElementById('remove-task-dialog');
+                            const instanceOptions = {
+                                id: 'remove-task-dialog',
+                                override: true,
+                            };
+                            const options = {
+                                onHide: () => {
+                                    Alpine.store('tasks').deleteId = undefined;
+                                    Alpine.store('tasks').loading = false;
+                                },
+                                onShow: () => {
+                                },
+                                onToggle: () => {
+                                },
+                            };
+                            const modal = initializeModal($targetEl, options, instanceOptions);
+                            modal.hide();
+                            Alpine.store('tasks').init();
+
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error deleting task:', error);
+                }
+            }
+
+        });
+    });
+
+</script>
