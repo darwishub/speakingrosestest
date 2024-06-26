@@ -2,14 +2,14 @@
     ViewData["Title"] = "Home Page";
 }
 
-<header class="flex items-center justify-center mb-8">
+<header class="flex items-center justify-center mb-8" x-data>
     <div class="max-w-[1300px] bg-white grid grid-cols-2 w-full mt-3 p-4 rounded-[18px] items-center">
         <div class="">
             <span class="font-bold text-lg leading-[27px]">Task Management</span>
         </div>
         <div class="">
             <div class="flex gap-3 items-center justify-end">
-                <button type="button" data-modal-target="add-new-task" data-modal-toggle="add-new-task"
+                <button type="button" x-on:click="$store.tasks.setNewTaskModal"
                     class="flex gap-[10px] justify-center items-center text-white p-[12px_20px] h-12 font-semibold bg-gradient-to-b from-[#977FFF] to-[#6F4FFF] rounded-full border border-taskia-background-grey">Add
                     New Task</button>
             </div>
@@ -106,7 +106,7 @@
         </div>
     </template>
 
-    <template x-if="$store.tasks.tasksEmpty && !$store.tasks.isFiltering">
+    <template x-if="$store.tasks.tasksEmpty && !$store.tasks.isFiltering && $store.tasks.animatePulse">
         <template x-for="i in 4">
             <div class="bg-white p-5 w-full rounded-[30px] animate-pulse">
                 <div class="task-card flex flex-col gap-5">
@@ -142,6 +142,10 @@
     </template>
 
     <template x-if="$store.tasks.tasksEmpty && $store.tasks.isFiltering">
+        <span class="font-bold text-lg leading-[27px]">No tasks found</span>
+    </template>
+
+    <template x-if="$store.tasks.tasksEmpty && !$store.tasks.isFiltering && !$store.tasks.animatePulse">
         <span class="font-bold text-lg leading-[27px]">No tasks found</span>
     </template>
 
@@ -329,7 +333,7 @@
                     </h3>
                     <button type="button"
                         class="text-gray-400 bg-transparent rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
-                        data-modal-hide="add-new-task">
+                        x-on:click="$store.tasks.closeAddModal">
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -424,25 +428,41 @@
         event.preventDefault();
 
         try {
-            if (formadd_validator.isValid) {
-                const form = event.target.form || event.target;
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
 
-                data.priority = parseInt(data.priority);
-                data.dueDate = new Date(data.dueDate).toISOString();
-                Alpine.store('tasks').loading = true;
-                Alpine.store('tasks').isFiltering = false;
-                const response = await create("/Home/InsertTask", data);
-                if (response?.response?.status == 200) {
-                    form.reset();
-                    document.querySelector('[data-modal-hide="add-new-task"]').click();
-                    Alpine.store('tasks').init();
-                }
-                Alpine.store('tasks').loading = false;
+            const form = event.target.form || event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
 
-                return response;
+            data.priority = parseInt(data.priority);
+            data.dueDate = new Date(data.dueDate).toISOString();
+            Alpine.store('tasks').loading = true;
+            Alpine.store('tasks').isFiltering = false;
+            const response = await create("/Home/InsertTask", data);
+            if (response?.response?.status == 200) {
+                const $targetEl = document.getElementById('add-new-task');
+                const instanceOptions = {
+                    id: 'add-new-task',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        resetAddFormAndValidation();
+                        form.reset();
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+                resetFilter();
+                Alpine.store('tasks').init();
             }
+            Alpine.store('tasks').loading = false;
+
+            return response;
+
         } catch (error) {
             console.log('Error creating task:', error);
         }
@@ -481,6 +501,7 @@
                 };
                 const modal = initializeModal($targetEl, options, instanceOptions);
                 modal.hide();
+                resetFilter();
                 Alpine.store('tasks').init();
             }
             Alpine.store('tasks').loading = false;
@@ -636,7 +657,7 @@
     }
 
     function initializeModal($targetEl, defaultOptions = {}, instanceOptions) {
-        // Default options
+
         const options = {
             placement: 'center-center',
             backdrop: 'static',
@@ -647,6 +668,13 @@
 
         const modal = new Modal($targetEl, options, instanceOptions);
         return modal;
+    }
+
+    function resetFilter() {
+        document.getElementById('filterbydate').value = '';
+        document.getElementById('filterbydate').nextElementSibling.value = '';
+        document.getElementById('filterbypriority').value = '';
+        document.getElementById('filterbystatus').value = '';
     }
 
 
@@ -660,16 +688,22 @@
             dataEdit: undefined,
             loading: false,
             isFiltering: false,
+            animatePulse: false,
             get tasksEmpty() {
-                return this.data.length == 0;
+                return this.data?.length == 0;
+            },
+            get tasksLength() {
+                return this.data?.length;
             },
             async init() {
+                this.animatePulse = true;
                 await getTasks().then(data => {
                     this.data = data.data?.map(task => ({
                         ...task,
                         dueDate: this.formatToLocalDateTime(task.dueDate)
                     }));
                 });
+                this.animatePulse = false;
             },
             formatToLocalDateTime(isoDateString) {
                 const utcDate = new Date(isoDateString + 'Z');
@@ -695,7 +729,15 @@
                 return numericStatus ? 'Completed' : 'In Progress';
             },
             async addTask(event) {
-                await addTask(event);
+                if (formadd_validator.isValid) {
+                    await addTask(event);
+                } else {
+                    formadd_validator.revalidate().then(isValid => {
+                        if (isValid) {
+                            addTask(event);
+                        }
+                    })
+                }
             },
             async updateTask(event) {
                 if (formedit_validator.isValid) {
@@ -757,6 +799,15 @@
                 modal.show();
                 document.getElementById('editduedate').nextElementSibling.value = Alpine.store('tasks').dataEdit?.dueDate;
             },
+            setNewTaskModal() {
+                const $targetEl = document.getElementById('add-new-task');
+                const instanceOptions = {
+                    id: 'add-new-task',
+                    override: true,
+                };
+                const modal = initializeModal($targetEl, instanceOptions);
+                modal.show();
+            },
             closeEditModal() {
                 const $targetEl = document.getElementById('edit-task');
                 const instanceOptions = {
@@ -767,6 +818,28 @@
                     onHide: () => {
                         resetEditFormAndValidation();
                         Alpine.store('tasks').dataEdit = undefined;
+                    },
+                    onShow: () => {
+                    },
+                    onToggle: () => {
+                    },
+                };
+                const modal = initializeModal($targetEl, options, instanceOptions);
+                modal.hide();
+            },
+            closeAddModal() {
+                const $targetEl = document.getElementById('add-new-task');
+                const instanceOptions = {
+                    id: 'add-new-task',
+                    override: true,
+                };
+                const options = {
+                    onHide: () => {
+                        resetAddFormAndValidation();
+                        let form = document.getElementById('form-add-task');
+                        form.reset();
+                        document.getElementById('taskduedate').nextElementSibling.value = '';
+                        document.getElementById('taskduedate').value = '';
                     },
                     onShow: () => {
                     },
@@ -855,6 +928,7 @@
                             };
                             const modal = initializeModal($targetEl, options, instanceOptions);
                             modal.hide();
+                            resetFilter();
                             Alpine.store('tasks').init();
 
                         }
@@ -888,6 +962,7 @@
                             };
                             const modal = initializeModal($targetEl, options, instanceOptions);
                             modal.hide();
+                            resetFilter();
                             Alpine.store('tasks').init();
                         }
                     }
@@ -920,6 +995,7 @@
                             };
                             const modal = initializeModal($targetEl, options, instanceOptions);
                             modal.hide();
+                            resetFilter();
                             Alpine.store('tasks').init();
 
                         }

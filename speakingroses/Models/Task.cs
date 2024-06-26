@@ -22,5 +22,5 @@ public partial class _Task
     [Column(TypeName = "datetime")]
     public DateTime DueDate { get; set; }
 
-    public bool Status { get; set; }
+    public bool? Status { get; set; }
 }

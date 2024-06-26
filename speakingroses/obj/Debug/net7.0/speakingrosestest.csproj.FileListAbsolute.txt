@@ -148,3 +148,4 @@ F:\TEST\speakingrosestest\speakingroses\obj\Debug\net7.0\refint\speakingrosestes
 F:\TEST\speakingrosestest\speakingroses\obj\Debug\net7.0\speakingrosestest.pdb
 F:\TEST\speakingrosestest\speakingroses\obj\Debug\net7.0\speakingrosestest.genruntimeconfig.cache
 F:\TEST\speakingrosestest\speakingroses\obj\Debug\net7.0\ref\speakingrosestest.dll
+F:\TEST\speakingrosestest\speakingroses\obj\Debug\net7.0\speakingrosestest.sourcelink.json
